@@ -3,13 +3,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-
-Console.WriteLine("Client");
-
 string mpan = GetMpan();
 Console.Title = $"Smart Meter Client (MPAN: {mpan})";
-Console.WriteLine($"MPAN: {mpan}");
-Console.ReadLine();
+Console.WriteLine("Client");
+
 var ipEndpoint = new IPEndPoint(IPAddress.Loopback, 9113);
 
 using TcpClient client = new();
