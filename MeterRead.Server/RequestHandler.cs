@@ -11,9 +11,7 @@ internal sealed class RequestHandler(IMeterConnectionService meterConnectionServ
 
     public IResponse HandleRequest(IRequest request)
     {
-        var requestHeader = request as RequestHeader<object>;
-
-        if (requestHeader is null)
+        if (request is not RequestHeader<object> requestHeader)
         {
             Logger.LogError("The request header is null");
             return new ResponseHeader<string> { Success = false };

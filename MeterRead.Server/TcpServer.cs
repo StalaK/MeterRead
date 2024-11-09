@@ -5,9 +5,9 @@ using System.Text;
 
 namespace MeterRead.Server;
 
-public sealed class TcpServer : IServer
+public sealed class TcpServer(IDatabase database) : IServer
 {
-    private readonly IDatabase? _database;
+    private readonly IDatabase _database = database;
 
     private TcpListener Server = new TcpListener(IPAddress.Any, 9113);
     private int ActiveConnections = 0;
