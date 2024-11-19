@@ -37,6 +37,7 @@ while (true)
 string GetMpan()
 {
     const int MPAN_LENGTH = 13;
-    var clientProcessCount = Process.GetProcesses().Count(x => x.ProcessName.Equals("SmartMeter.Client"));
+    var currentProcess = Process.GetCurrentProcess();
+    var clientProcessCount = Process.GetProcesses().Count(x => x.ProcessName.Equals(currentProcess.ProcessName));
     return clientProcessCount.ToString().PadRight(MPAN_LENGTH, '0');
 }
