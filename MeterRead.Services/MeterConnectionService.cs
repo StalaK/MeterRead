@@ -7,12 +7,12 @@ public sealed class MeterConnectionService(IDatabase database) : IMeterConnectio
 {
     private readonly IDatabase _database = database;
 
-    public ResponseHeader<MeterConnectionResponse> ConnectMeter(MeterConnectionRequest request)
+    public ResponseHeader ConnectMeter(MeterConnectionRequest request)
     {
         if (string.IsNullOrEmpty(request.Mpan))
         {
             Logger.LogError("No MPAN was sent in the meter connection request");
-            return new() { Success = false };
+            return new() { Success = false, Data = new ErrorResponse("No MPAN was sent in the meter connection request") };
         }
 
         var mpanValid = _database.ValidClient(request.Mpan);
@@ -20,11 +20,13 @@ public sealed class MeterConnectionService(IDatabase database) : IMeterConnectio
         if (!mpanValid)
         {
             Logger.LogError($"The entered MPAN ({request.Mpan}) is not registered");
-            return new() { Success = false };
+            return new() { Success = false, Data = new ErrorResponse($"The entered MPAN ({request.Mpan}) is not registered") };
         }
 
         _database.RecordReading(request.Mpan, request.MeterReading, 0m);
 
-        return new() { Data = new(request.Mpan, request.MeterReading) };
+        Console.WriteLine($"Meter MPAN {request.Mpan} connected successfully with an opening reading of {request.MeterReading}");
+
+        return new() { Data = new MeterConnectionResponse(request.Mpan, request.MeterReading) };
     }
 }

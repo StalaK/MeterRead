@@ -17,5 +17,6 @@ internal static class DependencyInjection
         builder.Services.AddTransient<IInvoicing, InvoicingService>();
         builder.Services.AddTransient<IMeterReading, MeterReadingService>();
         builder.Services.AddTransient<IMeterConnectionService, MeterConnectionService>();
+        builder.Services.AddTransient<IRequestHandler, RequestHandler>();
     }
 }

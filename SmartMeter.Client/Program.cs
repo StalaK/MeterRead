@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+﻿using SmartMeter.Services.DTO.Requests;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 string mpan = GetMpan();
 Console.Title = $"Smart Meter Client (MPAN: {mpan})";
@@ -15,22 +17,20 @@ await using NetworkStream stream = client.GetStream();
 
 while (true)
 {
-    var buffer = new byte[1024];
-    int receieved = await stream.ReadAsync(buffer);
-
-    var message = Encoding.UTF8.GetString(buffer, 0, receieved);
-
-    Console.WriteLine($"Received: {message}");
-
     Random rnd = new Random();
+    var num = rnd.Next(1000);
+
+    var connectionData = new MeterConnectionRequest { Mpan = mpan, MeterReading = num };
+    var conn = new RequestHeader<MeterConnectionRequest>(connectionData);
+
+    var connStr = JsonSerializer.Serialize(conn);
+    Console.WriteLine($"Connecting with opening reading of {num}");
+    await stream.WriteAsync(Encoding.UTF8.GetBytes(connStr));
+
     while (true)
     {
         Thread.Sleep(1000);
-
-        var num = rnd.Next(1000);
-
-        Console.WriteLine($"Sending number: {num}");
-        await stream.WriteAsync(Encoding.UTF8.GetBytes(num.ToString()));
+        Console.WriteLine("TODO: Send reading");
     }
 }
 

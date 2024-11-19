@@ -1,20 +1,23 @@
-﻿using MeterRead.Services.Interfaces;
+﻿using MeterRead.Services.DTO.Responses;
+using MeterRead.Services.Interfaces;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 namespace MeterRead.Server;
 
-public sealed class TcpServer(IDatabase database) : IServer
+public sealed class TcpServer(IDatabase database, IRequestHandler requestHandler) : IServer
 {
     private readonly IDatabase _database = database;
+    private readonly IRequestHandler _requestHandler = requestHandler;
 
     private TcpListener Server = new TcpListener(IPAddress.Any, 9113);
     private int ActiveConnections = 0;
 
     public void Start()
     {
-        Console.WriteLine("Meter Reading Server");
+        Console.Title = "Meter Reading Server";
 
         Server.Start();
 
@@ -26,32 +29,29 @@ public sealed class TcpServer(IDatabase database) : IServer
             Server.BeginAcceptTcpClient(HandleConnection, Server);
     }
 
-    private void HandleConnection(IAsyncResult result)
+    private async void HandleConnection(IAsyncResult result)
     {
         Server.BeginAcceptTcpClient(HandleConnection, Server);
 
         var client = Server.EndAcceptTcpClient(result);
         ActiveConnections++;
 
-        Console.WriteLine($"New Client Connected! ({ActiveConnections})");
-        Console.WriteLine($"Something from the DB: {_database.ValidClient("1234")}");
-        Console.WriteLine($"Something else from the DB: {_database.ValidClient("1111110000000")}");
+        var stream = client.GetStream();
 
-        while (true)
+        while (client.Connected)
         {
-            var stream = client.GetStream();
+            var requestResult = _requestHandler.HandleRequest(stream);
 
-            var response = Encoding.UTF8.GetBytes("You are now connected to the server!");
+            var responseJson = string.IsNullOrWhiteSpace(requestResult.JsonData)
+                ? JsonSerializer.Serialize(new ErrorResponse("An unknown error occurred with the request"))
+                : requestResult.JsonData;
 
-            stream.Write(response, 0, response.Length);
+            var responseData = Encoding.UTF8.GetBytes(responseJson);
 
-            while (client.Connected)
-            {
-                var input = new byte[1024];
-                stream.Read(input, 0, input.Length);
+            stream.Write(responseData, 0, responseData.Length);
 
-                Console.WriteLine($"{Encoding.UTF8.GetString(input)} - ({ActiveConnections} connections)");
-            }
+            if (requestResult.TerminateConnection)
+                client.Close();
         }
     }
 }

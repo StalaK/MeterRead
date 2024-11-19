@@ -1,7 +1,7 @@
 ﻿namespace MeterRead.Services.DTO.Responses;
-public sealed class ResponseHeader<T> : IResponse
+public sealed class ResponseHeader : IResponse
 {
     public bool Success { get; set; }
-
-    public T? Data { get; set; }
+    public bool TerminateConnection { get; set; }
+    public required object Data { get; set; }
 }
