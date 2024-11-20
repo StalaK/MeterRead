@@ -27,6 +27,6 @@ public sealed class MeterConnectionService(IDatabase database) : IMeterConnectio
 
         Console.WriteLine($"Meter MPAN {request.Mpan} connected successfully with an opening reading of {request.MeterReading}");
 
-        return new() { Data = new MeterConnectionResponse(request.Mpan, request.MeterReading) };
+        return new() { Success = true, TerminateConnection = false, Data = new MeterConnectionResponse(request.Mpan, request.MeterReading) };
     }
 }

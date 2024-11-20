@@ -1,4 +1,5 @@
-﻿using MeterRead.Services.DTO.Responses;
+﻿using MeterRead.Services;
+using MeterRead.Services.DTO.Responses;
 using MeterRead.Services.Interfaces;
 using System.Net;
 using System.Net.Sockets;
@@ -29,7 +30,7 @@ public sealed class TcpServer(IDatabase database, IRequestHandler requestHandler
             Server.BeginAcceptTcpClient(HandleConnection, Server);
     }
 
-    private async void HandleConnection(IAsyncResult result)
+    private void HandleConnection(IAsyncResult result)
     {
         Server.BeginAcceptTcpClient(HandleConnection, Server);
 
@@ -40,18 +41,26 @@ public sealed class TcpServer(IDatabase database, IRequestHandler requestHandler
 
         while (client.Connected)
         {
-            var requestResult = _requestHandler.HandleRequest(stream);
+            try
+            {
+                var requestResult = _requestHandler.HandleRequest(stream);
 
-            var responseJson = string.IsNullOrWhiteSpace(requestResult.JsonData)
-                ? JsonSerializer.Serialize(new ErrorResponse("An unknown error occurred with the request"))
-                : requestResult.JsonData;
+                var responseJson = string.IsNullOrWhiteSpace(requestResult.JsonData)
+                    ? JsonSerializer.Serialize(new ErrorResponse("An unknown error occurred with the request"))
+                    : requestResult.JsonData;
 
-            var responseData = Encoding.UTF8.GetBytes(responseJson);
+                var responseData = Encoding.UTF8.GetBytes(responseJson);
 
-            stream.Write(responseData, 0, responseData.Length);
+                stream.Write(responseData, 0, responseData.Length);
 
-            if (requestResult.TerminateConnection)
-                client.Close();
+                if (requestResult.TerminateConnection)
+                    client.Close();
+            }
+            catch (Exception ex) when (ex.InnerException is SocketException)
+            {
+                ActiveConnections--;
+                Logger.LogInformation("A client has disconnected");
+            }
         }
     }
 }

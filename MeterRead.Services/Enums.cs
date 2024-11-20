@@ -11,4 +11,5 @@ public enum RequestType
 {
     MeterConnected,
     MeterRead,
+    GetBill
 }

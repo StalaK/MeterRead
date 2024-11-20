@@ -1,4 +1,4 @@
-﻿using MeterRead.Database.Entities;
+﻿using MeterRead.Services.DTO.DatabaseEntities;
 using MeterRead.Services.Interfaces;
 
 namespace MeterRead.Database;
@@ -53,4 +53,14 @@ public sealed class DatabaseStub : IDatabase
             ReadingTime = DateTime.UtcNow
         });
     }
+
+    public IEnumerable<MeterReading> GetMeterReadings(string mpan) =>
+        MeterReadings
+            .Join(
+                Clients,
+                reading => reading.ClientId,
+                client => client.Id,
+                (readings, client) => new { readings, client })
+            .Where(x => x.client.Mpan.Equals(mpan))
+            .Select(x => x.readings);
 }

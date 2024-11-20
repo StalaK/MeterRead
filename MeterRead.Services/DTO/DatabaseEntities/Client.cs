@@ -1,4 +1,4 @@
-﻿namespace MeterRead.Database.Entities;
+﻿namespace MeterRead.Services.DTO.DatabaseEntities;
 
 public sealed class Client
 {
